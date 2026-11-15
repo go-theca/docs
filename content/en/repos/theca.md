@@ -1,0 +1,16 @@
+---
+title: "theca"
+weight: 10
+---
+
+# theca {#theca}
+
+Theca: an encrypted container format in pure Go (design stage). Tag: none yet.
+
+There is no released code. The design, its threat model, the primary sources it
+rests on and the decisions still open are in
+[docs/DESIGN.md](https://github.com/go-theca/theca/blob/main/docs/DESIGN.md), and the
+hardware-key design (FIDO2 `hmac-secret`) is in
+[docs/HARDWARE-KEYS.md](https://github.com/go-theca/theca/blob/main/docs/HARDWARE-KEYS.md).
+
+Source: <https://github.com/go-theca/theca>.
