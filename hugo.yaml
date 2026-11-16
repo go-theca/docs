@@ -3,7 +3,7 @@
 # Each documentation version is a separate build under
 # https://go-theca.github.io/docs/<version>/, where <version> is the minor
 # version of the code the pages describe, or "main" while no release is tagged.
-baseURL: "https://go-theca.github.io/docs/main/"
+baseURL: "https://go-theca.github.io/docs/0.1/"
 title: "go-theca docs"
 
 # themes/hextra is the tannevaled/hextra fork, pinned at a release tag as a
@@ -44,8 +44,8 @@ cascade:
 
 params:
   docs:
-    version: "main"
-  description: "go-theca: Theca, an encrypted container format in pure Go, pre-release."
+    version: "v0.1.0"
+  description: "go-theca: Theca, an encrypted container format in pure Go, v0.1.0."
   navbar:
     displayTitle: true
     displayLogo: false

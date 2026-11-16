@@ -10,14 +10,16 @@ line. It does not mount anything: the library gives an `io.ReaderAt` and
 `io.WriterAt` over the logical volume, and the command line creates, inspects,
 verifies, imports and exports containers.
 
-Status: pre-release (v0.1 in progress, no tag yet). The format can still change.
-This page is written from the `main` branch of
-[go-theca/theca](https://github.com/go-theca/theca) on 2026-11-16; where it
-differs from the repository, the repository wins.
+Release: **v0.1.0** (tag `v0.1.0` of
+[go-theca/theca](https://github.com/go-theca/theca); install with
+`go install github.com/go-theca/theca/cmd/theca@v0.1.0`). What changed is in the
+[CHANGELOG at v0.1.0](https://github.com/go-theca/theca/blob/v0.1.0/CHANGELOG.md).
+The README at that tag still says the format can still change. This page is
+written from that tag; where it differs from the repository, the repository wins.
 
 ## What it is {#what}
 
-From the [README](https://github.com/go-theca/theca/blob/main/README.md):
+From the [README](https://github.com/go-theca/theca/blob/v0.1.0/README.md):
 
 - authenticated sectors: XChaCha20 xor AES-256-CTR, with HMAC-SHA-256;
 - a Merkle tree over the sector tags, and a write-ahead journal;
@@ -26,7 +28,7 @@ From the [README](https://github.com/go-theca/theca/blob/main/README.md):
 - an optional hardware rollback counter.
 
 The design, its threat model, the sources it rests on and the decisions taken
-are in [docs/DESIGN.md](https://github.com/go-theca/theca/blob/main/docs/DESIGN.md);
+are in [docs/DESIGN.md](https://github.com/go-theca/theca/blob/v0.1.0/docs/DESIGN.md);
 section 0 is a one-table summary.
 
 ## Factors {#factors}
@@ -84,11 +86,11 @@ slot management on the command line
 ## Security notes {#security}
 
 The threat model is
-[DESIGN section 1](https://github.com/go-theca/theca/blob/main/docs/DESIGN.md).
+[DESIGN section 1](https://github.com/go-theca/theca/blob/v0.1.0/docs/DESIGN.md).
 The places where the code differs from, or fixes the details of, the design are
-in its [section 19, the implementation log](https://github.com/go-theca/theca/blob/main/docs/DESIGN.md);
+in its [section 19, the implementation log](https://github.com/go-theca/theca/blob/v0.1.0/docs/DESIGN.md);
 the FIDO2 design and its trade-offs are in
-[HARDWARE-KEYS.md section 9, "H2 revised"](https://github.com/go-theca/theca/blob/main/docs/HARDWARE-KEYS.md).
+[HARDWARE-KEYS.md section 9, "H2 revised"](https://github.com/go-theca/theca/blob/v0.1.0/docs/HARDWARE-KEYS.md).
 
 Known limits, as the repository states them:
 
@@ -114,13 +116,13 @@ Theca is measured against C references on one core with
 [go-scikit/refbench](https://github.com/go-scikit/refbench): libsodium for
 XChaCha20 and Argon2id, OpenSSL for AES-256-CTR and HMAC-SHA-256. The procedure
 and the cases are in
-[bench/README.md](https://github.com/go-theca/theca/blob/main/bench/README.md).
+[bench/README.md](https://github.com/go-theca/theca/blob/v0.1.0/bench/README.md).
 Ratio is Go time divided by reference time; below 1 is faster. Both runs are on
 commit `6d515c5` with go1.27.4, libsodium 1.0.22 and OpenSSL 4.0.2, from
 2026-11-15. Medians in ns/call; the full tables, with quartiles and allocation
 counts, are
-[docs/perf-table.md](https://github.com/go-theca/theca/blob/main/docs/perf-table.md) and
-[docs/perf-zen4-table.md](https://github.com/go-theca/theca/blob/main/docs/perf-zen4-table.md).
+[docs/perf-table.md](https://github.com/go-theca/theca/blob/v0.1.0/docs/perf-table.md) and
+[docs/perf-zen4-table.md](https://github.com/go-theca/theca/blob/v0.1.0/docs/perf-zen4-table.md).
 
 | case | Apple M4 Max (Go / ref, ratio) | AMD Zen 4 (Go / ref, ratio) |
 | --- | --- | --- |
