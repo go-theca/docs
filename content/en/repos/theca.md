@@ -14,10 +14,10 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.4.0** (tag `v0.4.0` of
+Release: **v0.5.0** (tag `v0.5.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.4.0`). What changed is in the
-[CHANGELOG at v0.4.0](https://github.com/go-theca/theca/blob/v0.4.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.5.0`). What changed is in the
+[CHANGELOG at v0.5.0](https://github.com/go-theca/theca/blob/v0.5.0/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
