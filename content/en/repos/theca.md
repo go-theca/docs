@@ -11,10 +11,13 @@ volume, and the command line creates, inspects, verifies, imports and exports
 containers. Since v0.2.0 it also serves the files inside over SMB and mounts
 them: see [Serving and mounting]({{< relref "serve.md" >}}).
 
-Release: **v0.2.0** (tag `v0.2.0` of
+The same logic is a library package, `share`, since v0.3.0: see
+[Library: share]({{< relref "share.md" >}}).
+
+Release: **v0.3.0** (tag `v0.3.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.2.0`). What changed is in the
-[CHANGELOG at v0.2.0](https://github.com/go-theca/theca/blob/v0.2.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.3.0`). What changed is in the
+[CHANGELOG at v0.3.0](https://github.com/go-theca/theca/blob/v0.3.0/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
