@@ -5,15 +5,15 @@ weight: 30
 
 # The `share` package {#share}
 
-Since [v0.3.0](https://github.com/go-theca/theca/releases/tag/v0.3.0) (and
-v0.4.0 for `Format`), the logic
+Since [v0.3.0](https://github.com/go-theca/theca/releases/tag/v0.3.0) (v0.4.0
+for `Format`, v0.5.0 for `Network`), the logic
 of [`theca serve`]({{< relref "serve.md" >}}) is a library package,
 `github.com/go-theca/theca/share`, so that a program other than the command line
 (the [GUI]({{< relref "gui.md" >}}) imports it) can share a container. This page
 is written from the
-[README at tag v0.4.0](https://github.com/go-theca/theca/blob/v0.4.0/README.md)
+[README at tag v0.5.0](https://github.com/go-theca/theca/blob/v0.5.0/README.md)
 (section "Sharing the files inside") and its
-[CHANGELOG](https://github.com/go-theca/theca/blob/v0.4.0/CHANGELOG.md); where it
+[CHANGELOG](https://github.com/go-theca/theca/blob/v0.5.0/CHANGELOG.md); where it
 differs from the repository, the repository wins.
 
 ```go
@@ -40,7 +40,11 @@ c.Close()      // the caller closes the container, after Stop
 - `Stop` is idempotent: it unmounts, closes the server and closes the filesystem.
   It never closes the container; the caller does, after `Stop`.
 - A container with no exFAT inside is refused with `share.ErrNoFilesystem`.
-- Only a loopback address is served.
+- Only a loopback address is served, unless `Options.Network` is true (theca
+  v0.5.0): then a non-loopback address is served with signing and encryption both
+  required. `Share.Addr()` returns the address served.
+- **Breaking in v0.5.0 (below v1):** `share.CheckAddr(addr string, network bool)`
+  takes the network switch; without it a non-loopback address is refused.
 - Since [v0.4.0](https://github.com/go-theca/theca/blob/v0.4.0/CHANGELOG.md),
   `share.Format(c)` makes a fresh container shareable: it lays the exFAT
   filesystem onto the container's volume, through the container. `theca create

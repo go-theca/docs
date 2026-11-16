@@ -28,7 +28,7 @@ theca serve vault.theca --credentials-out creds.json   # or: hand the account to
   disk.
 - `serve` unlocks the container and serves its exFAT over SMB (2.1 to 3.1.1,
   signed) using [go-filesystems/smb](https://github.com/go-filesystems/smb)
-  v0.13.0.
+  v0.15.0.
 - `serve --mount` mounts the share in the file manager (Finder, GNOME Files,
   Explorer) with **no password dialog**, through
   [go-fileshare/automount](https://github.com/go-fileshare/automount): the
@@ -44,12 +44,23 @@ theca serve vault.theca --credentials-out creds.json   # or: hand the account to
 
 ## Security {#security}
 
-- **Loopback only.** The data is decrypted, and the SMB server still accepts a
-  replayed frame ([go-filesystems/smb#53](https://github.com/go-filesystems/smb/issues/53))
-  and an unsigned request on a session that requires signing
-  ([go-filesystems/smb#54](https://github.com/go-filesystems/smb/issues/54)).
-  `serve` therefore listens on a loopback address only, while those two issues
-  are open.
+- **Two modes.** The data served is decrypted, so `serve` has two modes:
+  - **Loopback (the default).** `serve` listens on a loopback address only. A
+    non-loopback `--addr` is refused, and the refusal names `--network`.
+  - **`--network`** (`share.Options{Network: true}`, since theca v0.5.0). `serve`
+    listens beyond loopback only with message signing **and** encryption required
+    together (of every session and of the share), never one without the other: a
+    client that cannot do both (SMB 2.1, or one that refuses encryption) is
+    refused. This is go-filesystems/smb v0.15.0 `RequireSigning`, `EncryptData`
+    and `RequireEncryption`. A warning goes to standard error. It does not make
+    serving safe on a hostile network: anyone who can reach the address and has the
+    password can read and write the container's files, and the password is in
+    `--credentials-out`.
+- With `--network --mount` and an unspecified address (`0.0.0.0`, `::`), the local
+  mount uses `127.0.0.1` on the same port; another machine uses this machine's
+  address with that port.
+- The [GUI]({{< relref "gui.md" >}}) has no network option: it always serves
+  loopback.
 - **One random account per run**, never printed or passed as an argument.
 
 ## Measured, and where {#measured}
@@ -59,6 +70,9 @@ over SMB 3.1.1 signed with AES-128-GMAC, a file written through it survives a
 stop and a remount, and `verify` passes. Linux (GNOME Files, through gvfs) and
 Windows (Explorer, a drive letter through `MSFT_SmbMapping`) use the same
 command; **neither has been measured with theca yet**.
+
+`--network` was also measured on macOS: `smbutil` reports AES-128-GCM, GMAC, and
+`ENCRYPTION_REQUIRED` and `SIGNING_REQUIRED` both TRUE.
 
 ## A limit {#limit}
 
