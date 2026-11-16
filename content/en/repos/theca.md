@@ -6,16 +6,19 @@ weight: 10
 # theca {#theca}
 
 Theca is an encrypted container format in pure Go, with a library and a command
-line. It does not mount anything: the library gives an `io.ReaderAt` and
-`io.WriterAt` over the logical volume, and the command line creates, inspects,
-verifies, imports and exports containers.
+line. The library gives an `io.ReaderAt` and `io.WriterAt` over the logical
+volume, and the command line creates, inspects, verifies, imports and exports
+containers. Since v0.2.0 it also serves the files inside over SMB and mounts
+them: see [Serving and mounting]({{< relref "serve.md" >}}).
 
-Release: **v0.1.0** (tag `v0.1.0` of
+Release: **v0.2.0** (tag `v0.2.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.1.0`). What changed is in the
-[CHANGELOG at v0.1.0](https://github.com/go-theca/theca/blob/v0.1.0/CHANGELOG.md).
-The README at that tag still says the format can still change. This page is
-written from that tag; where it differs from the repository, the repository wins.
+`go install github.com/go-theca/theca/cmd/theca@v0.2.0`). What changed is in the
+[CHANGELOG at v0.2.0](https://github.com/go-theca/theca/blob/v0.2.0/CHANGELOG.md).
+The format may still change before v1. This page is written from that tag; where
+it differs from the repository, the repository wins. Its links to the
+repository's design documents still point at tag v0.1.0, and the performance
+tables below were measured on the v0.1.0 commit.
 
 ## What it is {#what}
 
@@ -79,7 +82,10 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   for its PIN, read from `--pin-file` (mode `0600` or stricter) or from the
   terminal, never from an argument.
 
-Not in this version: mounting, FIDO2 on Linux and Windows, the TPM counter, and
+`theca create --fs exfat` and `theca serve` (with `--mount`) are described in
+[Serving and mounting]({{< relref "serve.md" >}}).
+
+Not in this version: FIDO2 on Linux and Windows, the TPM counter, and
 slot management on the command line
 ([go-theca/theca#5](https://github.com/go-theca/theca/issues/5)).
 

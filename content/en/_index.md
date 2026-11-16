@@ -10,17 +10,21 @@ that holds a volume) written in pure Go with `CGO_ENABLED=0`. The goal is a form
 that is better than the state of the art in composition, that is, in how known,
 analysed primitives are put together, while inventing no primitive and no mode.
 
-Theca v0.1.0 is released; see its
-[CHANGELOG](https://github.com/go-theca/theca/blob/v0.1.0/CHANGELOG.md). The
-repository's README still says the format can still change. Theca has a library and a command line (create, info, verify, import, export,
-enroll-key); it does not mount. A container opens with a password, a recovery
-code, or a FIDO2 key paired with one of them. This site describes tag v0.1.0.
+Theca v0.2.0 is released (2026-11-16); see its
+[CHANGELOG](https://github.com/go-theca/theca/blob/v0.2.0/CHANGELOG.md). The
+format may still change before v1 (below v1, a breaking change bumps the minor
+version). Theca has a library and a command line (create, info, verify, import,
+export, enroll-key, serve). Since v0.2.0 it can serve the files inside a
+container over SMB on loopback and mount them in the file manager. A container
+opens with a password, a recovery code, or a FIDO2 key paired with one of them.
+This site describes tag v0.2.0.
 
 ## The repositories {#repositories}
 
 | Page | Tag | What it answers |
 | --- | --- | --- |
-| [theca]({{< relref "repos/theca.md" >}}) | v0.1.0 | what Theca is, its factors, the command line, security notes, measured performance |
+| [theca]({{< relref "repos/theca.md" >}}) | v0.2.0 | what Theca is, its factors, the command line, security notes, measured performance |
+| [serving and mounting]({{< relref "repos/serve.md" >}}) | v0.2.0 | `create --fs exfat`, `serve`, `serve --mount`: the files inside, over SMB on loopback |
 
 Links: the [organisation](https://github.com/go-theca) on GitHub, and the
 [landing page](https://go-theca.github.io/).
