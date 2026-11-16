@@ -45,7 +45,7 @@ cascade:
 params:
   docs:
     version: "main"
-  description: "go-theca: Theca, an encrypted container format in pure Go, at the design stage."
+  description: "go-theca: Theca, an encrypted container format in pure Go, pre-release."
   navbar:
     displayTitle: true
     displayLogo: false

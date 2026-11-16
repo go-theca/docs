@@ -10,15 +10,18 @@ that holds a volume) written in pure Go with `CGO_ENABLED=0`. The goal is a form
 that is better than the state of the art in composition, that is, in how known,
 analysed primitives are put together, while inventing no primitive and no mode.
 
-The project is at the design stage. Nothing is a commitment until a v0.1 tag says
-so. This page is written from the repository's README and design document on
-2026-11-15; the repository has no tag yet.
+The project is pre-release: v0.1 is in progress and the format can still change.
+Nothing is a commitment until a v0.1 tag says so. The repository has no tag yet.
+Theca has a library and a command line (create, info, verify, import, export,
+enroll-key); it does not mount. A container opens with a password, a recovery
+code, or a FIDO2 key paired with one of them. This site was updated from the
+repository's `main` branch on 2026-11-16.
 
 ## The repositories {#repositories}
 
 | Page | Tag | What it answers |
 | --- | --- | --- |
-| [theca]({{< relref "repos/theca.md" >}}) | no tag | the container format: design, threat model, sources, open decisions |
+| [theca]({{< relref "repos/theca.md" >}}) | no tag | what Theca is, its factors, the command line, security notes, measured performance |
 
 Links: the [organisation](https://github.com/go-theca) on GitHub, and the
 [landing page](https://go-theca.github.io/).
