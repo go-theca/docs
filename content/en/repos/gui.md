@@ -7,9 +7,9 @@ weight: 40
 
 [go-theca/gui](https://github.com/go-theca/gui) is a portable desktop GUI for
 Theca containers, built with [go-widgets](https://github.com/go-widgets). Release:
-**v0.1.0**, the first. This page is written from the
-[README](https://github.com/go-theca/gui/blob/v0.1.0/README.md) and
-[CHANGELOG](https://github.com/go-theca/gui/blob/v0.1.0/CHANGELOG.md) at that tag;
+**v0.2.0** (v0.1.0 was the first). This page is written from the
+[README](https://github.com/go-theca/gui/blob/v0.2.0/README.md) and
+[CHANGELOG](https://github.com/go-theca/gui/blob/v0.2.0/CHANGELOG.md) at that tag;
 where it differs from the repository, the repository wins.
 
 ```sh
@@ -25,7 +25,8 @@ It does what the `theca` command does, in a window: create a container, unlock i
 look at it, verify it, copy a file in and out, pair a FIDO2 security key with it,
 and share the exFAT filesystem inside it.
 
-- **Create.** File, size, policy (*any* or *2of3*) and the password twice. The
+- **Create.** File, size, filesystem (*exFAT*, the default, or a *raw volume*),
+  policy (*any* or *2of3*) and the password twice. The
   recovery code is shown once, and the screen cannot be left until you tick *I
   have written it down*.
 - **Unlock.** Password and/or recovery code, and a *Use security key* toggle.
@@ -43,8 +44,11 @@ and share the exFAT filesystem inside it.
 
 ## Limits {#limits}
 
-- **Share needs an exFAT volume**, and *Create new container* in v0.1.0 makes a
-  raw one: make the container with `theca create --fs exfat` to share it.
+- **Share needs an exFAT volume.** Since v0.2.0, *Create* offers the filesystem:
+  exFAT (the default, laid through the container by `share.Format` of theca
+  v0.4.0, as `theca create --fs exfat` does; a volume too small for exFAT is
+  refused and the half-made file removed) or a raw volume. A raw one cannot be
+  shared. A shareable container is made from the GUI.
 - Mounting is measured on **macOS**. Linux (gvfs) and Windows
   (`MSFT_SmbMapping`) go through the same library but have not been run from this
   GUI.

@@ -5,14 +5,15 @@ weight: 30
 
 # The `share` package {#share}
 
-Since [v0.3.0](https://github.com/go-theca/theca/releases/tag/v0.3.0), the logic
+Since [v0.3.0](https://github.com/go-theca/theca/releases/tag/v0.3.0) (and
+v0.4.0 for `Format`), the logic
 of [`theca serve`]({{< relref "serve.md" >}}) is a library package,
 `github.com/go-theca/theca/share`, so that a program other than the command line
 (the [GUI]({{< relref "gui.md" >}}) imports it) can share a container. This page
 is written from the
-[README at tag v0.3.0](https://github.com/go-theca/theca/blob/v0.3.0/README.md)
+[README at tag v0.4.0](https://github.com/go-theca/theca/blob/v0.4.0/README.md)
 (section "Sharing the files inside") and its
-[CHANGELOG](https://github.com/go-theca/theca/blob/v0.3.0/CHANGELOG.md); where it
+[CHANGELOG](https://github.com/go-theca/theca/blob/v0.4.0/CHANGELOG.md); where it
 differs from the repository, the repository wins.
 
 ```go
@@ -40,6 +41,11 @@ c.Close()      // the caller closes the container, after Stop
   It never closes the container; the caller does, after `Stop`.
 - A container with no exFAT inside is refused with `share.ErrNoFilesystem`.
 - Only a loopback address is served.
+- Since [v0.4.0](https://github.com/go-theca/theca/blob/v0.4.0/CHANGELOG.md),
+  `share.Format(c)` makes a fresh container shareable: it lays the exFAT
+  filesystem onto the container's volume, through the container. `theca create
+  --fs exfat` uses it, and so can any front end that creates containers (the GUI's
+  Create does). A volume too small is refused.
 
 `theca serve` is a thin front over this package. Its behaviour is unchanged,
 except that the address error now reads `address X: only a loopback address is
