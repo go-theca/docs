@@ -14,10 +14,10 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.7.0** (tag `v0.7.0` of
+Release: **v0.9.0** (tag `v0.9.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.7.0`). What changed is in the
-[CHANGELOG at v0.7.0](https://github.com/go-theca/theca/blob/v0.7.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.9.0`). What changed is in the
+[CHANGELOG at v0.9.0](https://github.com/go-theca/theca/blob/v0.9.0/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
@@ -117,7 +117,59 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `x/crypto/argon2` code with a NEON kernel on arm64. See the performance
   section below.
 
-Not in this version: FIDO2 on Linux and Windows, and the TPM counter.
+- **v0.8.0**: FIDO2 on Linux
+  ([go-gnulinux/fido](https://github.com/go-gnulinux/fido) v0.5.1, CTAP over
+  `hidraw`) and on Windows
+  ([go-mswin/webauthn](https://github.com/go-mswin/webauthn) v0.5.0,
+  `webauthn.dll`). The transport is chosen by `GOOS`. See "FIDO2 on each OS"
+  below.
+- **v0.9.0**: a TPM rollback counter. See "Rollback counter" below.
+
+## FIDO2 on each OS {#fido2-os}
+
+From the [README at v0.9.0](https://github.com/go-theca/theca/blob/v0.9.0/README.md):
+
+| OS | Route | PIN and prompts | Status |
+| --- | --- | --- | --- |
+| macOS | CTAP over IOKit HID (go-macos/fido) | theca asks: `--pin-file` or the terminal | measured on a YubiKey 5, firmware 5.7.4 |
+| Linux | CTAP over `/dev/hidraw*` (go-gnulinux/fido), pure Go | theca asks, as on macOS | fakes and a kernel-made HID device only; **not measured on a real key** |
+| Windows | `webauthn.dll` (go-mswin/webauthn) | **Windows asks**: a Windows Security dialog collects the PIN or fingerprint, so `--pin-file` does not apply | fakes and struct layouts only; **not measured on a real key** |
+
+On Linux `/dev/hidraw*` belongs to root on a stock system: install a udev rule
+giving your user access to FIDO keys (libfido2's `70-u2f.rules`); theca then says
+"a security key is attached but this user cannot open it" instead of "no key". On
+Windows, hmac-secret needs WebAuthn API version 6 (Windows 11 reports 9), and when
+several Theca credentials are on the key, Windows has the person pick one.
+
+## Rollback counter (v0.9.0) {#counter}
+
+```sh
+theca create vault.theca --size 1G --counter tpm   # defines an NV counter, binds the container to it
+theca info   vault.theca --counter tpm             # rollback protected: true (TPM NV counter ...)
+theca info   vault.theca --counter tpm --accept-rollback   # rebind an older copy on purpose (loud)
+```
+
+- `--counter tpm` defines a TPM 2.0 NV counter
+  ([go-tpm2/tpm2](https://github.com/go-tpm2/tpm2) v0.9.0) and binds the
+  container to it. The counter advances once per mount, not per commit: an older
+  copy of the container is refused with `ErrRollback` before anything is
+  written. The copy taken during the current session is the window that stays
+  open (DESIGN section 5.4).
+- Every command that opens the container needs `--counter tpm` again (and
+  `--tpm-auth-file` if you set one), **and opens the file read-write**, because a
+  mount rebinds the header. A protected container opened without the flag is
+  refused with a message naming it. Without `--counter tpm`, a container is not
+  protected: an older copy would be accepted.
+- `--tpm-device` is a device path, or `unix:SOCKET` for a software TPM. The
+  default is `/dev/tpmrm0` on **Linux**. **macOS has no TPM and Windows (TBS) is
+  not supported yet** (go-tpm2 has no TBS transport): both say so unless a device
+  is named.
+- Stated limit: the owner of the TPM can delete the counter, and `TPM2_Clear`
+  removes it. That is a denial of service, not a way back: a redefined counter
+  starts above every earlier count, so the container is refused until
+  `--accept-rollback` (DESIGN section 19, I22).
+- **Measured against a user-space software TPM (swtpm) on a Linux machine, not
+  a hardware TPM.** The counter has not been run against a hardware TPM.
 
 ## Security notes {#security}
 
@@ -130,11 +182,13 @@ the FIDO2 design and its trade-offs are in
 
 Known limits, as the repository states them:
 
-- **No rollback counter in the command line yet.** Every command that opens a
-  container says whether it is protected against rollback; in this version it
-  never is, so an older copy of a container would be accepted.
-- **FIDO2 works on macOS only** for now (through go-macos/fido). It was tested
-  on a YubiKey 5, firmware 5.7.4.
+- **Rollback protection is opt-in.** Every command that opens a container says
+  whether it is protected against rollback. Without `--counter tpm` it is not,
+  and an older copy would be accepted. With it, protection needs a TPM 2.0
+  (Linux only for now), and the TPM's owner can delete the counter (a denial of
+  service, not a rollback).
+- **FIDO2 was measured on a real key on macOS only** (a YubiKey 5, firmware
+  5.7.4). The Linux and Windows routes exist but are not measured on a real key.
 - **A reader of the FIDO2 salt can test password guesses.** The salt that a key
   is asked for is derived from the partner factor, so for whoever reads it (a
   forged authenticator, a leaked log) it is a password verifier, at Argon2id cost
