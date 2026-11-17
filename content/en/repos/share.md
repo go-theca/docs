@@ -40,6 +40,9 @@ c.Close()      // the caller closes the container, after Stop
 - `Stop` is idempotent: it unmounts, closes the server and closes the filesystem.
   It never closes the container; the caller does, after `Stop`.
 - A container with no exFAT inside is refused with `share.ErrNoFilesystem`.
+- **Breaking in v0.10.2 (below v1):** the `share.User` constant is gone. The
+  account name is random per share: use `Share.User()` (the prefix is
+  `share.UserPrefix`, then 8 random base32 characters).
 - Only a loopback address is served, unless `Options.Network` is true (theca
   v0.5.0): then a non-loopback address is served with signing and encryption both
   required. `Share.Addr()` returns the address served.

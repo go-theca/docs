@@ -61,7 +61,13 @@ theca serve vault.theca --credentials-out creds.json   # or: hand the account to
   address with that port.
 - The [GUI]({{< relref "gui.md" >}}) has no network option: it always serves
   loopback.
-- **One random account per run**, never printed or passed as an argument.
+- **One random account per share**, never printed or passed as an argument. Since
+  v0.10.2 the account **name** is random too: `theca-` and 8 random base32
+  characters (`Share.User()`, `share.UserPrefix`), written in `--credentials-out`.
+  Before, every share used the name `theca`, and on macOS a second mount in the
+  same session failed ("authentication error (errno 80)"), because macOS replays a
+  stale credential for a fixed account name on 127.0.0.1. A fixed name failed 12
+  of 12 repeats; a random name 0 of 120 (the smb author's harness).
 
 ## Measured, and where {#measured}
 
