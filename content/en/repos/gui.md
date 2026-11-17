@@ -7,9 +7,9 @@ weight: 40
 
 [go-theca/gui](https://github.com/go-theca/gui) is a portable desktop GUI for
 Theca containers, built with [go-widgets](https://github.com/go-widgets). Release:
-**v0.2.0** (v0.1.0 was the first). This page is written from the
-[README](https://github.com/go-theca/gui/blob/v0.2.0/README.md) and
-[CHANGELOG](https://github.com/go-theca/gui/blob/v0.2.0/CHANGELOG.md) at that tag;
+**v0.3.0** (v0.1.0 was the first). This page is written from the
+[README](https://github.com/go-theca/gui/blob/v0.3.0/README.md) and
+[CHANGELOG](https://github.com/go-theca/gui/blob/v0.3.0/CHANGELOG.md) at that tag;
 where it differs from the repository, the repository wins.
 
 ```sh
@@ -42,6 +42,25 @@ and share the exFAT filesystem inside it.
   share's account password is never shown. A container with no exFAT inside is
   refused with a message.
 
+## Since v0.3.0 {#v030}
+
+- **Share on the network**, a toggle beside Share: it serves on every interface
+  with message signing **and** encryption required of every client (theca
+  `share.Options{Network: true}`). A warning says that anyone on the network with
+  the password can connect. The screen shows where it listens and the port; the
+  password stays hidden until *Show password* and is cleared at stop, lock and
+  close. Live-tested on macOS: `smbutil` reports encryption and signing required.
+- **Keyslots screen**, from the Container screen: it shows the recorded slots and
+  which ones the password and/or recovery code you type now open, and removes the
+  slot of a factor set while a **different** set to keep must still open the
+  container. A removal that would leave no way in is refused and changes nothing.
+  A removal only stops access to this copy.
+- **The security key's state is shown on screen**: "touch your key", or "type its
+  PIN" (masked, emptied on Submit, never in a message), then touch again. On
+  Windows the screen says that Windows shows its own dialog. These states are
+  tested with a **fake key**; a real-key run has been done by hand on macOS only.
+  It uses theca v0.8.0 (FIDO2 on Linux and Windows).
+
 ## Limits {#limits}
 
 - **Share needs an exFAT volume.** Since v0.2.0, *Create* offers the filesystem:
@@ -52,7 +71,8 @@ and share the exFAT filesystem inside it.
 - Mounting is measured on **macOS**. Linux (gvfs) and Windows
   (`MSFT_SmbMapping`) go through the same library but have not been run from this
   GUI.
-- FIDO2 is macOS-only for now.
+- FIDO2 is measured on a real key on macOS only; on Linux and Windows it is built
+  but not measured.
 - The Linux and Windows windows are built and cross-compiled in CI, but have not
   been run by hand yet.
 - There is no file picker yet: paths are typed or pasted.
