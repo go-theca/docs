@@ -14,10 +14,10 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.10.1** (tag `v0.10.1` of
+Release: **v0.10.3** (tag `v0.10.3` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.10.1`). What changed is in the
-[CHANGELOG at v0.10.1](https://github.com/go-theca/theca/blob/v0.10.1/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.10.3`). What changed is in the
+[CHANGELOG at v0.10.3](https://github.com/go-theca/theca/blob/v0.10.3/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
@@ -81,8 +81,13 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `theca`, `credProtect` 3, `hmac-secret`) and pairs it with the password, and
   with the recovery code too when `--recovery-file` names it. The key is touched
   twice: to register, then to confirm.
-- `--fido2` adds the attached key to an unlock. A key without a fingerprint asks
-  for its PIN, read from `--pin-file` (mode `0600` or stricter) or from the
+- `--fido2` adds the attached key to an unlock. Since v0.10.3 the key's built-in
+  verification (fingerprint) is used **only when its GetInfo says `uv` is true**
+  (CTAP 2.1 6.4). On `CTAP2_ERR_UV_INVALID` the tries left are read and shown, and
+  the attempt is retried up to 5 times. On `UV_BLOCKED`, no tries left, or no
+  fingerprint enrolled (`NOT_ALLOWED`), theca says so and uses the PIN when one is
+  set, else fails with `ErrUVLocked`. This is **not measured on a real YubiKey
+  Bio**. A key without a fingerprint asks for its PIN, read from `--pin-file` (mode `0600` or stricter) or from the
   terminal, never from an argument.
 
 `theca create --fs exfat` and `theca serve` (with `--mount`) are described in
@@ -124,6 +129,11 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `webauthn.dll`). The transport is chosen by `GOOS`. See "FIDO2 on each OS"
   below.
 - **v0.9.0**: a TPM rollback counter. See "Rollback counter" below.
+- **v0.10.2**: the share's account name is random (`theca-` and 8 random base32
+  characters), which fixes a second mount failing on macOS. See
+  [Serving and mounting]({{< relref "serve.md" >}}).
+- **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
+  `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
   threat-model note, and a correction of v0.9.0's recovery advice. See "Rollback
   counter" below.

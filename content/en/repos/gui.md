@@ -7,9 +7,9 @@ weight: 40
 
 [go-theca/gui](https://github.com/go-theca/gui) is a portable desktop GUI for
 Theca containers, built with [go-widgets](https://github.com/go-widgets). Release:
-**v0.3.0** (v0.1.0 was the first). This page is written from the
-[README](https://github.com/go-theca/gui/blob/v0.3.0/README.md) and
-[CHANGELOG](https://github.com/go-theca/gui/blob/v0.3.0/CHANGELOG.md) at that tag;
+**v0.3.1** (v0.1.0 was the first). This page is written from the
+[README](https://github.com/go-theca/gui/blob/v0.3.1/README.md) and
+[CHANGELOG](https://github.com/go-theca/gui/blob/v0.3.1/CHANGELOG.md) at that tag;
 where it differs from the repository, the repository wins.
 
 ```sh
@@ -60,6 +60,11 @@ and share the exFAT filesystem inside it.
   Windows the screen says that Windows shows its own dialog. These states are
   tested with a **fake key**; a real-key run has been done by hand on macOS only.
   It uses theca v0.8.0 (FIDO2 on Linux and Windows).
+
+v0.3.1 uses theca v0.10.2, which **fixes a second mount failing on macOS**
+("authentication error (errno 80)"): every share now has its own random account
+name. Live tests: network share 6 of 6, local share 3 of 3 (the failure was
+intermittent before).
 
 ## Limits {#limits}
 
