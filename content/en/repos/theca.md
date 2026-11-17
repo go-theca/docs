@@ -186,8 +186,13 @@ measurement of libsodium on this machine. The control is recorded in the
 [bench README on main](https://github.com/go-theca/theca/blob/main/bench/README.md):
 a C program calling `crypto_pwhash` (Argon2id, t=3, m=64 MiB, one lane) pinned
 to the same core gives 265 ms with the registry build and 265 to 271 ms with the
-legacy pkgx build of libsodium 1.0.22 (2026-11-17). That README has no ratio
-table; its XChaCha20 row has no such control yet. The M4 Max tables are in
+legacy pkgx build of libsodium 1.0.22 (2026-11-17). The Zen 4 table is
+[docs/perf-zen4-table.md](https://github.com/go-theca/theca/blob/main/docs/perf-zen4-table.md)
+(refbench, commit `20299a8` = v0.7.0, 1-minute load 0.31 to 0.47, OpenSSL 4.0.2):
+AES-256-CTR 0.97 of OpenSSL, sector tag 0.98, XChaCha20 0.44 and Argon2id 0.25 of
+libsodium, Seal and Open 0.53. The M4 Max table is
+[docs/perf-table.md](https://github.com/go-theca/theca/blob/main/docs/perf-table.md).
+The XChaCha20 row has no libsodium control yet. The M4 Max tables are in
 `docs/perf-table.md` at that tag.
 
 Rows of the v0.1.0 run that were slower, each tracked as an issue (the
