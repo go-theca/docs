@@ -14,10 +14,10 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.9.0** (tag `v0.9.0` of
+Release: **v0.10.1** (tag `v0.10.1` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.9.0`). What changed is in the
-[CHANGELOG at v0.9.0](https://github.com/go-theca/theca/blob/v0.9.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.10.1`). What changed is in the
+[CHANGELOG at v0.10.1](https://github.com/go-theca/theca/blob/v0.10.1/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
@@ -124,6 +124,9 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `webauthn.dll`). The transport is chosen by `GOOS`. See "FIDO2 on each OS"
   below.
 - **v0.9.0**: a TPM rollback counter. See "Rollback counter" below.
+- **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
+  threat-model note, and a correction of v0.9.0's recovery advice. See "Rollback
+  counter" below.
 
 ## FIDO2 on each OS {#fido2-os}
 
@@ -141,12 +144,13 @@ giving your user access to FIDO keys (libfido2's `70-u2f.rules`); theca then say
 Windows, hmac-secret needs WebAuthn API version 6 (Windows 11 reports 9), and when
 several Theca credentials are on the key, Windows has the person pick one.
 
-## Rollback counter (v0.9.0) {#counter}
+## Rollback counter (v0.9.0 to v0.10.1) {#counter}
 
 ```sh
 theca create vault.theca --size 1G --counter tpm   # defines an NV counter, binds the container to it
 theca info   vault.theca --counter tpm             # rollback protected: true (TPM NV counter ...)
-theca info   vault.theca --counter tpm --accept-rollback   # rebind an older copy on purpose (loud)
+theca info   vault.theca --counter tpm --accept-rollback   # accept an older copy on purpose (loud); needs the counter
+theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # the counter is gone: bind to a new one
 ```
 
 - `--counter tpm` defines a TPM 2.0 NV counter
@@ -164,10 +168,31 @@ theca info   vault.theca --counter tpm --accept-rollback   # rebind an older cop
   default is `/dev/tpmrm0` on **Linux**. **macOS has no TPM and Windows (TBS) is
   not supported yet** (go-tpm2 has no TBS transport): both say so unless a device
   is named.
-- Stated limit: the owner of the TPM can delete the counter, and `TPM2_Clear`
-  removes it. That is a denial of service, not a way back: a redefined counter
-  starts above every earlier count, so the container is refused until
-  `--accept-rollback` (DESIGN section 19, I22).
+- **When the counter is gone** (the owner undefined the index, or `TPM2_Clear`, a
+  BIOS reset or a reinstall removed it; the index has no `POLICY_DELETE`, which
+  would need platform authorization), the container cannot be opened. The message
+  says so and names the recovery, `theca counter rebind FILE --counter tpm
+  --tpm-owner-auth-file F` (v0.10.0). Earlier text, including this page's, said
+  `--accept-rollback` would help; it does not, because it needs a counter that
+  exists and is ahead of the container. `rebind` needs the factors that open the
+  container **and** the TPM owner password. It defines a counter (at the recorded
+  handle if free, else the first free one), binds the header to it and increments
+  it. Since v0.10.1 a still-present old counter is **deleted first**: otherwise a
+  copy made just before the rebind would still open with it. **Rollback protection
+  then restarts from that moment**; nothing is checked against the old counter. An
+  old copy of the container shows the same refusal as a reset TPM: do not rebind to
+  open one.
+- New counters carry `TPMA_NV_NO_DA` (go-tpm2/tpm2 v0.10.0), so a wrong authValue
+  file does not count towards the TPM's lockout. Counters made by v0.9.0 are still
+  opened.
+- **Threat model.** The counter protects against someone who can replace the
+  container file but not control the TPM it is bound to. The header records a
+  counter's handle and its NV Name (type and attributes), not a TPM's identity.
+  Whoever controls the TPM used (the host of a virtual TPM, a software TPM whose
+  state sits on the same storage as the container, a replaced TPM) can define an
+  index with the same Name and bring it to a value at or above an old bound.
+  Pinning a TPM's identity is not done
+  ([go-theca/theca#39](https://github.com/go-theca/theca/issues/39)).
 - **Measured against a user-space software TPM (swtpm) on a Linux machine, not
   a hardware TPM.** The counter has not been run against a hardware TPM.
 
@@ -186,7 +211,8 @@ Known limits, as the repository states them:
   whether it is protected against rollback. Without `--counter tpm` it is not,
   and an older copy would be accepted. With it, protection needs a TPM 2.0
   (Linux only for now), and the TPM's owner can delete the counter (a denial of
-  service, not a rollback).
+  service, not a rollback; `theca counter rebind` recovers, and protection
+  restarts).
 - **FIDO2 was measured on a real key on macOS only** (a YubiKey 5, firmware
   5.7.4). The Linux and Windows routes exist but are not measured on a real key.
 - **A reader of the FIDO2 salt can test password guesses.** The salt that a key
