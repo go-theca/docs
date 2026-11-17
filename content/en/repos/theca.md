@@ -182,8 +182,12 @@ open). On Zen 4 (the AMD Ryzen 9 7950X, v0.7.0): AES-256-CTR is **0.97 of
 OpenSSL**, the sector tag 0.98, and Argon2id **0.25 of libsodium**. On amd64 the
 Argon2id code is x/crypto's unchanged, and libsodium's 265 ms there was
 confirmed by a C control program on the same core, so that row stands as a
-measurement of libsodium on this machine (see the bench README in the theca
-repository once go-theca/theca#34 is merged). The M4 Max tables are in
+measurement of libsodium on this machine. The control is recorded in the
+[bench README on main](https://github.com/go-theca/theca/blob/main/bench/README.md):
+a C program calling `crypto_pwhash` (Argon2id, t=3, m=64 MiB, one lane) pinned
+to the same core gives 265 ms with the registry build and 265 to 271 ms with the
+legacy pkgx build of libsodium 1.0.22 (2026-11-17). That README has no ratio
+table; its XChaCha20 row has no such control yet. The M4 Max tables are in
 `docs/perf-table.md` at that tag.
 
 Rows of the v0.1.0 run that were slower, each tracked as an issue (the
