@@ -178,8 +178,13 @@ setup cost, which is a cost of the design and not of the language.
 [CHANGELOG](https://github.com/go-theca/theca/blob/v0.7.0/CHANGELOG.md):
 Argon2id on the Apple M4 Max went from 1.54 to **0.73 of libsodium**, and
 AES-256-CTR is 1.03x and the sector tag 1.04x OpenSSL there (#8 and #9 stay
-open). **Zen 4 was not re-measured.** The tables are in `docs/perf-table.md` at
-that tag.
+open). On Zen 4 (the AMD Ryzen 9 7950X, v0.7.0): AES-256-CTR is **0.97 of
+OpenSSL**, the sector tag 0.98, and Argon2id **0.25 of libsodium**. On amd64 the
+Argon2id code is x/crypto's unchanged, and libsodium's 265 ms there was
+confirmed by a C control program on the same core, so that row stands as a
+measurement of libsodium on this machine (see the bench README in the theca
+repository once go-theca/theca#34 is merged). The M4 Max tables are in
+`docs/perf-table.md` at that tag.
 
 Rows of the v0.1.0 run that were slower, each tracked as an issue (the
 changelog says #8 and #9 stay open after v0.7.0, and #10 is the Argon2id one):
