@@ -14,10 +14,10 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.5.0** (tag `v0.5.0` of
+Release: **v0.7.0** (tag `v0.7.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.5.0`). What changed is in the
-[CHANGELOG at v0.5.0](https://github.com/go-theca/theca/blob/v0.5.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.7.0`). What changed is in the
+[CHANGELOG at v0.7.0](https://github.com/go-theca/theca/blob/v0.7.0/CHANGELOG.md).
 The format may still change before v1. This page is written from that tag; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
@@ -88,9 +88,36 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
 `theca create --fs exfat` and `theca serve` (with `--mount`) are described in
 [Serving and mounting]({{< relref "serve.md" >}}).
 
-Not in this version: FIDO2 on Linux and Windows, the TPM counter, and
-slot management on the command line
-([go-theca/theca#5](https://github.com/go-theca/theca/issues/5)).
+## Slots and caches (v0.6.0) {#slots}
+
+- `theca slots list` and `theca slots remove` list the key slots and remove one
+  by the factors that open it
+  ([go-theca/theca#5](https://github.com/go-theca/theca/issues/5)). In the
+  library: `Container.RemoveFactors(remove, keep)`, `SlotsOf`, `Slots` and
+  `ErrLastWay`. A removal that would leave the `keep` set with no other slot is
+  refused before any write.
+- The metadata block cache and the Merkle node cache of an open container are
+  bounded
+  ([#6](https://github.com/go-theca/theca/issues/6)):
+  `OpenOptions.CacheBytes` and `CreateOptions.CacheBytes`, default 64 MiB. Clean
+  entries are evicted least-recently-used and wiped; dirty ones are pinned until
+  commit; an evicted entry is authenticated again when read. `Close` wipes the
+  caches.
+
+## Later releases {#later}
+
+- **v0.6.1**: go-filesystems/smb v0.16.1, with per-source connection caps (32
+  per source, 16 pre-auth; loopback is not exempt, and the limit is far above one
+  Finder client) and a zone-id fix.
+- **v0.7.0**: AES-256-CTR runs through
+  [go-encryptions/ctr](https://github.com/go-encryptions/ctr) (round keys expanded
+  once, one kernel call per sector, no allocation; `Zeroize` wipes the round
+  keys), and Argon2id through
+  [go-encryptions/argon2](https://github.com/go-encryptions/argon2), the
+  `x/crypto/argon2` code with a NEON kernel on arm64. See the performance
+  section below.
+
+Not in this version: FIDO2 on Linux and Windows, and the TPM counter.
 
 ## Security notes {#security}
 
@@ -147,7 +174,15 @@ Zen 4 machine is an AMD Ryzen 9 7950X pinned to one CPU, at a load of 0.16 to
 0.35. Both runs are marked valid. A gap in a row includes Theca's own per-sector
 setup cost, which is a cost of the design and not of the language.
 
-Open slower rows, each tracked as an issue:
+**Since v0.7.0** (the table above is the v0.1.0 run), per the
+[CHANGELOG](https://github.com/go-theca/theca/blob/v0.7.0/CHANGELOG.md):
+Argon2id on the Apple M4 Max went from 1.54 to **0.73 of libsodium**, and
+AES-256-CTR is 1.03x and the sector tag 1.04x OpenSSL there (#8 and #9 stay
+open). **Zen 4 was not re-measured.** The tables are in `docs/perf-table.md` at
+that tag.
+
+Rows of the v0.1.0 run that were slower, each tracked as an issue (the
+changelog says #8 and #9 stay open after v0.7.0, and #10 is the Argon2id one):
 
 - [#8](https://github.com/go-theca/theca/issues/8): Sector/AES-256-CTR is slower than OpenSSL.
 - [#9](https://github.com/go-theca/theca/issues/9): Sector/Tag (HMAC-SHA-256) is slower than OpenSSL.
