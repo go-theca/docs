@@ -91,6 +91,16 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   theca info vault.theca --password-from 'keepassxc:https://theca.invalid/vault' --fido2 --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
   ```
 
+- **Storing the new secrets** (v0.16.0). `theca create --password-to REF
+  [--generate N] [--recovery-to REF] [--replace]` puts the new password and the
+  recovery code straight into a secret manager (`keychain:`, `secretservice:`,
+  `keepassxc:URL`, through `secretsource store`), so neither is typed into a
+  file or left on the terminal. `--generate N` draws the password (letters and
+  digits) and needs `--password-to`; `--password-to` and `--generate` exclude
+  `--password-file` and `--password-from`. The password is stored **before** the
+  container is created, so a failed store creates nothing. The recovery code is
+  stored after creation; if that store fails it is printed after all (the only
+  copy) and `create` exits with the error.
 - `create` prints the recovery code once, on standard output. If you redirect it
   to a file, that file gets your umask (often `0644`): restrict it, or better,
   write the code down on paper.
