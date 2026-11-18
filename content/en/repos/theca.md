@@ -77,16 +77,18 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `file:PATH`, `keychain:SERVICE/ACCOUNT` (macOS Keychain),
   `secretservice:SERVICE/ACCOUNT` or `secretservice:KEY=VALUE[,KEY=VALUE]`
   (GNOME Keyring, KWallet, KeePassXC's Secret Service integration on Linux), and
-  since v0.14.0 `keepassxc:by-uuid/HEX`, `keepassxc:by-path/Group/Title` or a
-  URL (KeePassXC's browser-integration protocol, macOS and Linux). No scheme runs
-  a command. The `-file` flags are unchanged and exclusive with the `-from`
+  since v0.14.0 `keepassxc:URL` (the only form since v0.15.0), the entry whose URL field is that URL
+  (KeePassXC's browser-integration protocol, macOS and Linux; fill the entry's
+  URL field, for example `https://theca.invalid/vault`). `keepassxc:by-uuid/...`
+  and `keepassxc:by-path/...` are refused: KeePassXC 2.8.0 crashes on an entry
+  without a URL. No scheme runs a command. The `-file` flags are unchanged and exclusive with the `-from`
   flags. KeePassXC needs Browser Integration enabled and one
   `secretsource keepassxc associate`; `secretsource check REF` verifies a
   reference without printing the secret.
 
   ```sh
   theca info vault.theca --password-from keychain:theca/vault
-  theca info vault.theca --password-from 'keepassxc:by-path/Vault' --fido2 --pin-from 'keepassxc:by-path/Yubikey PIN'
+  theca info vault.theca --password-from 'keepassxc:https://theca.invalid/vault' --fido2 --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
   ```
 
 - `create` prints the recovery code once, on standard output. If you redirect it
