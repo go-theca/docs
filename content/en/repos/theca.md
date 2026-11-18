@@ -71,6 +71,24 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   read from the terminal with echo off, or from `--password-file`. The recovery
   code is read from `--recovery-file`. Both files must be regular files that only
   their owner can read (mode `0600` or stricter); anything else is refused.
+- **Secrets from a reference** (v0.12.0). `--password-from`, `--recovery-from`
+  and `--pin-from` take a reference instead of a plaintext file, as
+  [go-authn/secretsource](https://github.com/go-authn/secretsource) defines it:
+  `file:PATH`, `keychain:SERVICE/ACCOUNT` (macOS Keychain),
+  `secretservice:SERVICE/ACCOUNT` or `secretservice:KEY=VALUE[,KEY=VALUE]`
+  (GNOME Keyring, KWallet, KeePassXC's Secret Service integration on Linux), and
+  since v0.14.0 `keepassxc:by-uuid/HEX`, `keepassxc:by-path/Group/Title` or a
+  URL (KeePassXC's browser-integration protocol, macOS and Linux). No scheme runs
+  a command. The `-file` flags are unchanged and exclusive with the `-from`
+  flags. KeePassXC needs Browser Integration enabled and one
+  `secretsource keepassxc associate`; `secretsource check REF` verifies a
+  reference without printing the secret.
+
+  ```sh
+  theca info vault.theca --password-from keychain:theca/vault
+  theca info vault.theca --password-from 'keepassxc:by-path/Vault' --fido2 --pin-from 'keepassxc:by-path/Yubikey PIN'
+  ```
+
 - `create` prints the recovery code once, on standard output. If you redirect it
   to a file, that file gets your umask (often `0644`): restrict it, or better,
   write the code down on paper.
