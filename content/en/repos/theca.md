@@ -111,6 +111,18 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   `theca`, `credProtect` 3, `hmac-secret`) and pairs it with the password, and
   with the recovery code too when `--recovery-file` names it. The key is touched
   twice: to register, then to confirm.
+- **Pairing only adds a way in** (v0.17.0). Under policy `any` the password
+  alone (and the recovery code alone) still open the container after
+  `enroll-key`. It says which still do and prints the command that removes the
+  password-only slot. `enroll-key --require` does it in one run: after pairing,
+  the key is touched once more to prove the password with the key opens the
+  container, and only then is the password-only slot removed (nothing is removed
+  if the proof fails; the pairing stays). It does **not** remove the
+  recovery-only slot: that code is the way in if the key is lost, so under
+  policy `any` it still opens the container alone until you run
+  `theca slots remove --remove recovery --keep password+fido2` (after which a
+  lost key means a lost container). A recovery code that was not presented
+  cannot be tested, and the output says so.
 - `--fido2` adds the attached key to an unlock. Since v0.10.3 the key's built-in
   verification (fingerprint) is used **only when its GetInfo says `uv` is true**
   (CTAP 2.1 6.4). On `CTAP2_ERR_UV_INVALID` the tries left are read and shown, and
@@ -131,6 +143,15 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   library: `Container.RemoveFactors(remove, keep)`, `SlotsOf`, `Slots` and
   `ErrLastWay`. A removal that would leave the `keep` set with no other slot is
   refused before any write.
+- Since v0.17.0 `--remove` and `--keep` also take the key: `password+fido2` and
+  `recovery+fido2` (any order; a key opens a slot only with one partner). A set
+  with the key touches it once, and the slot it opens must exist and must not be
+  among the removed ones, so a key that is not the one enrolled here, or that
+  holds no Theca credential, is refused before any write. To make the key
+  mandatory: `theca slots remove vault.theca --password-file pw --remove
+  password --keep password+fido2`. A container only the key opens also needs
+  `--fido2` to be opened (a second touch). Library:
+  `Container.RemoveFactorSets(remove, keep [][]Factor)` and `KeyPairs`.
 - The metadata block cache and the Merkle node cache of an open container are
   bounded
   ([#6](https://github.com/go-theca/theca/issues/6)):
