@@ -51,6 +51,51 @@ alone, or the recovery code alone, open the container. `--policy 2of3` needs two
 of the three: password and recovery code from the start, and a FIDO2 key
 (`enroll-key`) then pairs with each.
 
+## Daily use: profiles, open, close (v0.20.0) {#daily}
+
+A long command line is the price of several factors. A **profile** names a
+container once; `theca open` then uses the password from the secret manager and
+one touch of the key, with nothing new stored anywhere:
+
+```sh
+# once: references only, nothing secret is written, nothing secret is read
+theca profile add vault ~/vault/vault.theca \
+    --password-from 'keepassxc:https://theca.invalid/vault' --device bio
+
+# every day
+theca open vault      # manager + one touch; mounts; frees the terminal
+theca status          # what is open, where it is mounted
+theca close vault     # unmounts, commits, closes
+```
+
+- **The profile file** is `containers.toml` in `os.UserConfigDir()/theca`, mode
+  `0600` in a `0700` directory; a file another user can read is refused. It holds
+  the container's path, `password-from`, `recovery-from` and `pin-from`
+  (`keychain:`, `secretservice:`, `keepassxc:`; `file:` is refused), `device`,
+  `counter`, `tpm-device`, `tpm-auth-from`, `tpm-endorsement-auth-from`, `share`,
+  `sync` and `close-on-lock`. `theca profile add` checks the syntax of the
+  references and never reads a secret; `profile list` and `profile remove NAME`
+  list and delete (the container and the manager's entries stay). A counter whose
+  authValue is derived from the master key needs no `tpm-auth-from`;
+  `counter = "tpm"` stays in the profile, because the header can be read only
+  after the unlock.
+- **`open`** starts a background process that holds the unlocked container, serves
+  it on a loopback address and mounts it in the file manager, then returns. The
+  process locks the container file first, so a second `open` of the same container
+  is refused before any unlock or counter increment.
+- **`close` and `status`** talk to that process over a Unix socket, mode `0600` in
+  a `0700` directory (`$XDG_RUNTIME_DIR/theca`, else `os.UserConfigDir()/theca/run`),
+  which refuses any user but the owner (`SO_PEERCRED`, `LOCAL_PEERCRED`). A
+  message is one JSON line of at most 4096 bytes, with no unknown field; no
+  secret crosses it. The profile parser and the socket decoder are fuzzed.
+- **Auto-close** (`close-on-lock`, default true). On Linux theca asks logind over
+  D-Bus: `Session.Lock`, `LockedHint`, `PrepareForSleep`, `PrepareForShutdown`. On
+  macOS it reads the session's `CGSSessionScreenIsLocked` every two seconds and
+  treats a wall-clock jump that the monotonic clock did not make as a sleep. The
+  container is then unmounted, committed and closed. Windows has no source yet:
+  the container stays open until `theca close`. Not measured against a real lock
+  or sleep on either system: the signals are tested with fakes only.
+
 ## Command line {#cli}
 
 ```sh
@@ -190,6 +235,8 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
   counter" below.
 - **v0.18.0**: the rollback counter is pinned to the TPM it was made on; a counter
   on another TPM is refused. See "Rollback counter" below.
+- **v0.20.0**: `theca profile`, `open`, `close` and `status`: one command and one
+  touch, closing on lock. See "Daily use" above.
 
 ## FIDO2 on each OS {#fido2-os}
 
