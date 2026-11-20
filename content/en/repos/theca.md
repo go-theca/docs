@@ -188,6 +188,8 @@ theca info vault.theca --recovery-file rc --fido2 # recovery code + key
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
   threat-model note, and a correction of v0.9.0's recovery advice. See "Rollback
   counter" below.
+- **v0.18.0**: the rollback counter is pinned to the TPM it was made on; a counter
+  on another TPM is refused. See "Rollback counter" below.
 
 ## FIDO2 on each OS {#fido2-os}
 
@@ -205,7 +207,7 @@ giving your user access to FIDO keys (libfido2's `70-u2f.rules`); theca then say
 Windows, hmac-secret needs WebAuthn API version 6 (Windows 11 reports 9), and when
 several Theca credentials are on the key, Windows has the person pick one.
 
-## Rollback counter (v0.9.0 to v0.10.1) {#counter}
+## Rollback counter (v0.9.0 to v0.18.0) {#counter}
 
 ```sh
 theca create vault.theca --size 1G --counter tpm   # defines an NV counter, binds the container to it
@@ -246,14 +248,32 @@ theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # t
 - New counters carry `TPMA_NV_NO_DA` (go-tpm2/tpm2 v0.10.0), so a wrong authValue
   file does not count towards the TPM's lockout. Counters made by v0.9.0 are still
   opened.
-- **Threat model.** The counter protects against someone who can replace the
-  container file but not control the TPM it is bound to. The header records a
-  counter's handle and its NV Name (type and attributes), not a TPM's identity.
-  Whoever controls the TPM used (the host of a virtual TPM, a software TPM whose
-  state sits on the same storage as the container, a replaced TPM) can define an
-  index with the same Name and bring it to a value at or above an old bound.
-  Pinning a TPM's identity is not done
-  ([go-theca/theca#39](https://github.com/go-theca/theca/issues/39)).
+- **The TPM is pinned (v0.18.0,
+  [go-theca/theca#39](https://github.com/go-theca/theca/issues/39)).** `create`
+  and `counter rebind` record in the authenticated header the identity of the TPM
+  the counter is on: the digest of the Name of its endorsement key (the ECC P-256
+  EK template of the TCG EK Credential Profile, created transiently and flushed,
+  never persistent; go-tpm2/tpm2 v0.11.0). Every mount compares it **before
+  reading the counter**; a counter on another TPM is refused, naming both
+  identities (first 6 bytes in hex) and the recovery. `info` shows
+  `counter TPM identity: <hex>`. It needs the endorsement authValue to be empty
+  (the default). Containers made before v0.18.0 carry no identity: they open as
+  before, **with a warning** at every mount, until `theca counter rebind` pins
+  them (it replaces the counter, so protection restarts from that moment).
+- **Threat model, by attacker.** Someone who replaces the container file with an
+  older copy: stopped, as before. Someone who brings **another TPM** (a fresh
+  software TPM, a replaced TPM) and defines the same index on it at the old bound:
+  stopped since v0.18.0, not in a container made earlier and not rebound. Someone
+  who **controls the TPM in use** (the host of a virtual TPM, a program standing
+  between theca and the TPM): **not stopped**; the identity names a TPM, it does
+  not prove the TPM answering is that one, because the EK public is not secret.
+  Someone who **holds a copy of the TPM's state** (a software TPM's state
+  directory, a VM snapshot) holds its endorsement seed: **not stopped**, and the
+  counter rolls back with the state. A bus interposer forging the answers of a
+  discrete TPM: **not stopped**. `TPM2_NV_Certify` under an attestation key would
+  authenticate the answers; it was weighed and deferred
+  ([DESIGN section 5.4.1](https://github.com/go-theca/theca/blob/v0.18.0/docs/DESIGN.md)),
+  because it does not change the outcome against the other attackers.
 - **Measured against a user-space software TPM (swtpm) on a Linux machine, not
   a hardware TPM.** The counter has not been run against a hardware TPM.
 
