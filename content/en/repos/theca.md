@@ -14,11 +14,12 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.10.3** (tag `v0.10.3` of
+Release: **v0.24.0** (tag `v0.24.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.10.3`). What changed is in the
-[CHANGELOG at v0.10.3](https://github.com/go-theca/theca/blob/v0.10.3/CHANGELOG.md).
-The format may still change before v1. This page is written from that tag; where
+`go install github.com/go-theca/theca/cmd/theca@v0.24.0`). What changed is in the
+[CHANGELOG at v0.24.0](https://github.com/go-theca/theca/blob/v0.24.0/CHANGELOG.md).
+The format may still change before v1. This page was written from v0.10.3 and
+the security changes of v0.24.0 are added below; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
 tables below were measured on the v0.1.0 commit.
@@ -248,6 +249,17 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
 - **v0.10.2**: the share's account name is random (`theca-` and 8 random base32
   characters), which fixes a second mount failing on macOS. See
   [Serving and mounting]({{< relref "serve.md" >}}).
+- **v0.24.0** (security, go-theca/theca#66): a counter that is asked for is
+  required. A container whose header names no counter (made without one, or a
+  copy from before `counter rebind`) is refused under `--counter tpm` with "this
+  container has no rollback counter, but --counter tpm was asked: an older copy
+  may have been restored"; `theca.Open` returns `ErrCounterRequired` when given a
+  counter. `close-on-lock` fails closed: if the lock watcher cannot start, `open`
+  fails, and `--close-on-lock=false` is the explicit opt-out. On Linux only
+  logind's signals about this process's own session count, and a session already
+  locked at start closes at once; a screen locker that tells logind nothing
+  (bare `i3lock`, `swaylock`) is not seen. The loopback SMB share requires
+  message signing. `profile add` refuses a line `Parse` would refuse.
 - **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
   `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
