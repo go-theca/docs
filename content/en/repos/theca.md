@@ -90,11 +90,18 @@ theca close vault     # unmounts, commits, closes
   secret crosses it. The profile parser and the socket decoder are fuzzed.
 - **Auto-close** (`close-on-lock`, default true). On Linux theca asks logind over
   D-Bus: `Session.Lock`, `LockedHint`, `PrepareForSleep`, `PrepareForShutdown`. On
-  macOS it reads the session's `CGSSessionScreenIsLocked` every two seconds and
-  treats a wall-clock jump that the monotonic clock did not make as a sleep. The
-  container is then unmounted, committed and closed. Windows has no source yet:
-  the container stays open until `theca close`. Not measured against a real lock
-  or sleep on either system: the signals are tested with fakes only.
+  macOS (v0.22.0) it listens for `com.apple.screenIsLocked`,
+  `NSWorkspaceWillSleepNotification` and
+  `NSWorkspaceSessionDidResignActiveNotification`: no polling lag, and the
+  container is closed before the machine sleeps. The observers are proven at
+  start with a notification of the process's own name; if they cannot be
+  registered or heard, theca falls back to reading `CGSSessionScreenIsLocked`
+  every two seconds (a wall-clock jump the monotonic clock did not make counts as
+  a sleep), and `theca open` prints which mode is active. The container is then
+  unmounted, committed and closed. Windows has no source yet: the container stays
+  open until `theca close`. Not measured against a real lock or sleep on either
+  system: the signals are tested with fakes, and on macOS with a real round trip
+  of a notification of our own name.
 
 ## Command line {#cli}
 
