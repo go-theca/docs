@@ -327,9 +327,11 @@ theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # t
   refused with a message naming it. Without `--counter tpm`, a container is not
   protected: an older copy would be accepted.
 - `--tpm-device` is a device path, or `unix:SOCKET` for a software TPM. The
-  default is `/dev/tpmrm0` on **Linux**. **macOS has no TPM and Windows (TBS) is
-  not supported yet** (go-tpm2 has no TBS transport): both say so unless a device
-  is named.
+  default is `/dev/tpmrm0` on **Linux** and `tbs:` (TPM Base Services, through
+  go-tpm2/devtpm's `OpenTBS`) on **Windows** since v0.26.0. **macOS has no TPM**
+  and says so unless a device is named. **Windows is not measured on a real
+  TPM**: on a Windows 11 VM without a TPM the real `tbs.dll` answers
+  `TBS_E_TPM_NOT_FOUND`, and no counter has been run there.
 - **When the counter is gone** (the owner undefined the index, or `TPM2_Clear`, a
   BIOS reset or a reinstall removed it; the index has no `POLICY_DELETE`, which
   would need platform authorization), the container cannot be opened. The message
