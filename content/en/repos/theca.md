@@ -14,12 +14,12 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.24.0** (tag `v0.24.0` of
+Release: **v0.25.0** (tag `v0.25.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.24.0`). What changed is in the
-[CHANGELOG at v0.24.0](https://github.com/go-theca/theca/blob/v0.24.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.25.0`). What changed is in the
+[CHANGELOG at v0.25.0](https://github.com/go-theca/theca/blob/v0.25.0/CHANGELOG.md).
 The format may still change before v1. This page was written from v0.10.3 and
-the security changes of v0.24.0 are added below; where
+the security changes of v0.24.0 and v0.25.0 are added below; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
 tables below were measured on the v0.1.0 commit.
@@ -260,6 +260,26 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   locked at start closes at once; a screen locker that tells logind nothing
   (bare `i3lock`, `swaylock`) is not seen. The loopback SMB share requires
   message signing. `profile add` refuses a line `Parse` would refuse.
+- **v0.25.0** (security, go-theca/theca#68): the key material in memory.
+  - The FIDO2 PIN and the recovery code are `[]byte`, wiped after use like the
+    password (`Unlock.Recovery`, `RecoveryFactor`, `format.ParseRecoveryCode` and
+    the `fido2` PIN callbacks changed type: a break for library callers). Two
+    copies remain as an immutable `string`: the PIN at go-authn/fido's
+    `PINToken`, and the recovery code `create` prints.
+  - `theca _serve` (the detached daemon) turns core dumps off and refuses
+    debuggers before any key exists: on Linux `RLIMIT_CORE` 0 and
+    `PR_SET_DUMPABLE` 0, on macOS `RLIMIT_CORE` 0 and `PT_DENY_ATTACH`, nothing
+    elsewhere. A refusal is a warning on stderr, not a stop.
+  - The master secret, the slot wrap keys and their cipher caches are locked in
+    RAM (`mlock`). `--mlock=auto` (the default) warns once if the system
+    refuses, `--mlock=required` makes a refusal an error, `--mlock=off` turns it
+    off; `open` hands its choice to the daemon. Not locked: the AES round keys
+    inside the CTR library, transient key-encryption keys on the stack, and the
+    `crypto/hmac` pads.
+  - Cost, single core, 15 interleaved rounds, macOS arm64: open 187 us (off)
+    against 202 us (auto) with a test-size KDF; writing 2 MiB 3.14 s against
+    3.21 s; reading 8 MiB 3.06 ms against 2.96 ms. The load was slightly above 8,
+    so read the ratios.
 - **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
   `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
