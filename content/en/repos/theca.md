@@ -88,6 +88,14 @@ theca close vault     # unmounts, commits, closes
   which refuses any user but the owner (`SO_PEERCRED`, `LOCAL_PEERCRED`). A
   message is one JSON line of at most 4096 bytes, with no unknown field; no
   secret crosses it. The profile parser and the socket decoder are fuzzed.
+- **`session.Start`** (v0.23.0) is what `open` does to start that process, as a
+  library call: `session.Start(ctx, exe, name, notice)` runs `exe _serve NAME` with
+  no terminal (standard input is `/dev/null`), waits until the container is
+  unlocked and mounted, hands each line the process writes to its standard error
+  while it unlocks (the security key's touch notice) to `notice`, and returns the
+  `session.Info`. A cancelled `ctx` kills the process. `session.StartAttached` is
+  the terminal form `theca open` uses. The [gui]({{< relref "gui.md" >}}) uses it
+  for its profiles screen.
 - **Auto-close** (`close-on-lock`, default true). On Linux theca asks logind over
   D-Bus: `Session.Lock`, `LockedHint`, `PrepareForSleep`, `PrepareForShutdown`. On
   macOS (v0.22.0) it listens for `com.apple.screenIsLocked`,

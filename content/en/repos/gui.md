@@ -7,9 +7,9 @@ weight: 40
 
 [go-theca/gui](https://github.com/go-theca/gui) is a portable desktop GUI for
 Theca containers, built with [go-widgets](https://github.com/go-widgets). Release:
-**v0.3.1** (v0.1.0 was the first). This page is written from the
-[README](https://github.com/go-theca/gui/blob/v0.3.1/README.md) and
-[CHANGELOG](https://github.com/go-theca/gui/blob/v0.3.1/CHANGELOG.md) at that tag;
+**v0.4.0** (v0.1.0 was the first). This page is written from the
+[README](https://github.com/go-theca/gui/blob/v0.4.0/README.md) and
+[CHANGELOG](https://github.com/go-theca/gui/blob/v0.4.0/CHANGELOG.md) at that tag;
 where it differs from the repository, the repository wins.
 
 ```sh
@@ -42,6 +42,24 @@ and share the exFAT filesystem inside it.
   share's account password is never shown. A container with no exFAT inside is
   refused with a message.
 
+## Since v0.4.0 {#v040}
+
+- **My profiles**, from Home: lists the profiles of `containers.toml` (the file
+  `theca profile add` writes) with their state (*closed*; *open* with the mount
+  point and since when; or the error), and opens and closes them as
+  `theca open NAME` and `theca close NAME` do. *Open* starts the same background
+  process through `session.Start` of theca v0.23.0. The password, recovery code
+  and PIN come from the references in the profile (keychain, Secret Service,
+  KeePassXC): **the screen never asks for or holds a secret**. While the process
+  waits for the security key the row says "touch your security key now" and the
+  key hint is shown; *Cancel* ends the wait. The GUI needs the `theca` command:
+  it looks on the `PATH`, then in `~/.local/bin`, `~/go/bin`, `/usr/local/bin`
+  and `/opt/homebrew/bin`, and says how to install it when it finds none. The
+  profile stays open when the window is closed, as after `theca open`.
+  Tested with fakes and against a real session socket; the app was started once
+  on macOS against a temporary `containers.toml`, and no real container was
+  opened from this screen.
+
 ## Since v0.3.0 {#v030}
 
 - **Share on the network**, a toggle beside Share: it serves on every interface
@@ -61,7 +79,7 @@ and share the exFAT filesystem inside it.
   tested with a **fake key**; a real-key run has been done by hand on macOS only.
   It uses theca v0.8.0 (FIDO2 on Linux and Windows).
 
-v0.3.1 uses theca v0.10.2, which **fixes a second mount failing on macOS**
+v0.3.1 used theca v0.10.2 and v0.4.0 uses theca v0.23.0. v0.3.1's theca v0.10.2 **fixes a second mount failing on macOS**
 ("authentication error (errno 80)"): every share now has its own random account
 name. Live tests: network share 6 of 6, local share 3 of 3 (the failure was
 intermittent before).
