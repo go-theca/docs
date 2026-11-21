@@ -104,22 +104,27 @@ go install github.com/go-theca/theca/cmd/theca@latest
 theca create vault.theca --size 1G            # asks the password twice, prints the recovery code once
 theca info   vault.theca                      # unlock and describe
 theca verify vault.theca                      # authenticate every sector and tree node
-theca import vault.theca --password-file pw --offset 0 < disk.img
-theca export vault.theca --password-file pw > disk.img
+theca import vault.theca --password-from keychain:theca/vault --offset 0 < disk.img
+theca export vault.theca --password-from keychain:theca/vault > disk.img
 
-theca enroll-key vault.theca --recovery-file rc   # pair the key with the password and the recovery code
-theca info vault.theca --fido2                    # password + key
-theca info vault.theca --recovery-file rc --fido2 # recovery code + key
+theca enroll-key vault.theca --recovery-from keychain:theca/rc   # pair the key with the password and the recovery code
+theca info vault.theca --fido2                                   # password + key
+theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code + key
 ```
 
 - **Secrets never go in arguments or environment variables.** The password is
-  read from the terminal with echo off, or from `--password-file`. The recovery
-  code is read from `--recovery-file`. Both files must be regular files that only
-  their owner can read (mode `0600` or stricter); anything else is refused.
+  read from the terminal with echo off, or from a secret manager (next item).
+- **Secret files are deprecated** (v0.21.0). `--password-file`, `--recovery-file`,
+  `--pin-file`, `--tpm-auth-file` and `--tpm-owner-auth-file` still work (a regular
+  file, mode `0600` or stricter) but are hidden from the help, and each use prints
+  a warning on standard error naming the `--X-from` replacement. So does a `file:`
+  reference in `--password-from`, `--recovery-from` and `--pin-from`.
+  `--tpm-auth-from` refuses `file:`, like the other TPM flags. A plaintext file
+  beside a container protected by hardware keys defeats them.
 - **Secrets from a reference** (v0.12.0). `--password-from`, `--recovery-from`
   and `--pin-from` take a reference instead of a plaintext file, as
   [go-authn/secretsource](https://github.com/go-authn/secretsource) defines it:
-  `file:PATH`, `keychain:SERVICE/ACCOUNT` (macOS Keychain),
+  `keychain:SERVICE/ACCOUNT` (macOS Keychain),
   `secretservice:SERVICE/ACCOUNT` or `secretservice:KEY=VALUE[,KEY=VALUE]`
   (GNOME Keyring, KWallet, KeePassXC's Secret Service integration on Linux), and
   since v0.14.0 `keepassxc:URL` (the only form since v0.15.0), the entry whose URL field is that URL
