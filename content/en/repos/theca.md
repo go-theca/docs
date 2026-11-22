@@ -264,8 +264,9 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   - The FIDO2 PIN and the recovery code are `[]byte`, wiped after use like the
     password (`Unlock.Recovery`, `RecoveryFactor`, `format.ParseRecoveryCode` and
     the `fido2` PIN callbacks changed type: a break for library callers). Two
-    copies remain as an immutable `string`: the PIN at go-authn/fido's
-    `PINToken`, and the recovery code `create` prints.
+    copies remained as an immutable `string` (the PIN at go-authn/fido's
+    `PINToken`, and the recovery code `create` prints); both are gone since
+    v0.28.0.
   - `theca _serve` (the detached daemon) turns core dumps off and refuses
     debuggers before any key exists: on Linux `RLIMIT_CORE` 0 and
     `PR_SET_DUMPABLE` 0, on macOS `RLIMIT_CORE` 0 and `PT_DENY_ATTACH`, nothing
@@ -275,11 +276,21 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
     refuses, `--mlock=required` makes a refusal an error, `--mlock=off` turns it
     off; `open` hands its choice to the daemon. Not locked: the AES round keys
     inside the CTR library, transient key-encryption keys on the stack, and the
-    `crypto/hmac` pads.
+    `crypto/hmac` pads (see v0.28.0 for which of these are wiped).
   - Cost, single core, 15 interleaved rounds, macOS arm64: open 187 us (off)
     against 202 us (auto) with a test-size KDF; writing 2 MiB 3.14 s against
     3.21 s; reading 8 MiB 3.06 ms against 2.96 ms. The load was slightly above 8,
     so read the ratios.
+- **v0.28.0** (security, go-theca/theca#74): fewer secret copies. The PIN goes to
+  the key through go-authn/fido v0.15.0 `PINTokenBytes`, so no `string` of it is
+  made; `theca.Create` and `format.NewRecoveryCode` return the recovery code as
+  `[]byte` (a break for library callers) and `create` prints it from the bytes
+  and wipes it. go-authn/secretsource v0.7.0 adds a Windows DACL check on
+  `file:` secrets and refuses an empty one. Still not wiped: the `crypto/aes`
+  fallback's key schedule (the accelerated path is wiped on `Close`), the
+  by-value key-encryption keys on the stack, and the `crypto/hmac` pads; a local
+  wiping HMAC was not adopted because it was not measured against the standard
+  library (the machine was at load 29).
 - **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
   `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
