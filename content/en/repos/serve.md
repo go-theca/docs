@@ -28,7 +28,7 @@ theca serve vault.theca --credentials-out creds.json   # or: hand the account to
   disk.
 - `serve` unlocks the container and serves its exFAT over SMB (2.1 to 3.1.1,
   signed) using [go-filesystems/smb](https://github.com/go-filesystems/smb)
-  v0.15.0.
+  v0.15.0 (v0.17.2 since theca v0.32.0).
 - `serve --mount` mounts the share in the file manager (Finder, GNOME Files,
   Explorer) with **no password dialog**, through
   [go-fileshare/automount](https://github.com/go-fileshare/automount): the
