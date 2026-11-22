@@ -85,3 +85,13 @@ command; **neither has been measured with theca yet**.
 A copy of a file written through the share is one transaction per journal
 budget, not one per file (DESIGN section 19, I12). A crash in the middle of a
 large copy can leave the exFAT metadata of that copy half-written, as on a disk.
+
+## Write speed {#write-speed}
+
+The journal budget is also the batch: every commit costs about four flushes
+(`F_FULLFSYNC` on macOS) whatever its size. Since v0.26.1, `theca create` sizes
+the journal at one entry per 16 sectors, from 64 to 4096 (`--journal`
+overrides). Measured on macOS, single core, 64 MiB written in a row: 12.0 to
+92.4 MiB/s through the library, and 7.6 to 28.8 MiB/s through the share (32 KiB
+SMB writes, `--sync` 5 s). The size is fixed at creation: a container made
+before v0.26.1 keeps its 64 entries. Linux is not measured.
