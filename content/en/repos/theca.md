@@ -14,12 +14,14 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.25.0** (tag `v0.25.0` of
+Release: **v0.29.0** (tag `v0.29.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.25.0`). What changed is in the
-[CHANGELOG at v0.25.0](https://github.com/go-theca/theca/blob/v0.25.0/CHANGELOG.md).
-The format may still change before v1. This page was written from v0.10.3 and
-the security changes of v0.24.0 and v0.25.0 are added below; where
+`go install github.com/go-theca/theca/cmd/theca@v0.29.0`). What changed is in the
+[CHANGELOG at v0.29.0](https://github.com/go-theca/theca/blob/v0.29.0/CHANGELOG.md).
+The format may still change before v1. This page was written from v0.10.3, the
+security changes of v0.24.0 and v0.25.0 and the systemd credentials of v0.29.0
+are added below; the other changes of v0.26.0 to v0.28.0 are in the CHANGELOG, not
+here; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
 tables below were measured on the v0.1.0 commit.
@@ -184,6 +186,40 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   theca info vault.theca --password-from keychain:theca/vault
   theca info vault.theca --password-from 'keepassxc:https://theca.invalid/vault' --fido2 --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
   ```
+
+- **Secrets from a systemd service** (v0.29.0, Linux). `--password-from`,
+  `--recovery-from` and `--pin-from` also take `systemd-creds:NAME`
+  (go-authn/secretsource v0.8.0): the credential `NAME` that systemd delivers in
+  `$CREDENTIALS_DIRECTORY` (`LoadCredentialEncrypted=`, `LoadCredential=`), or,
+  failing that, decrypted from a `credstore.encrypted` directory. The bytes are
+  taken exactly, with no newline trimming, so seal the password with `printf %s`.
+  Measured on systemd 257 (Debian 13) with `--with-key=host`; not measured with a
+  TPM2 key.
+
+  ```sh
+  # once, as root: seal the password to this machine (the host key)
+  printf %s 'the vault password' | systemd-creds encrypt --with-key=host --name=theca - /etc/credstore.encrypted/theca.cred
+  ```
+
+  ```ini
+  # /etc/systemd/system/theca-vault.service
+  [Service]
+  LoadCredentialEncrypted=theca
+  ExecStart=/usr/local/bin/theca serve /srv/vault.theca --password-from systemd-creds:theca
+  ```
+
+  Choose what the credential is sealed to, and plan the way back.
+  `--with-key=tpm2` binds to the TPM2 chip and to no PCR by default. Adding PCRs
+  makes the credential unreadable whenever they change, and the service then
+  fails closed, with the vault shut: a bare `--tpm2-pcrs=7` (Secure Boot state)
+  can lock every credential after a firmware or shim update or a vTPM migration,
+  so do not use it without a recovery path. Better: `--with-key=host+tpm2` (the
+  TPM2 chip and the host key file; survives firmware updates, lost with either); a
+  signed PCR policy (`--tpm2-public-key=PATH`, PCR 11 by default, signatures from
+  `systemd-measure`, no re-sealing for a new boot component); or
+  `systemd-pcrlock` (`unlock-firmware-code` before a firmware update,
+  `make-policy` after). Keep the password where this machine is not needed, and
+  re-seal with `systemd-creds encrypt` when decryption fails; the error says so.
 
 - **Storing the new secrets** (v0.16.0). `theca create --password-to REF
   [--generate N] [--recovery-to REF] [--replace]` puts the new password and the
