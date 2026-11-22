@@ -95,3 +95,21 @@ overrides). Measured on macOS, single core, 64 MiB written in a row: 12.0 to
 92.4 MiB/s through the library, and 7.6 to 28.8 MiB/s through the share (32 KiB
 SMB writes, `--sync` 5 s). The size is fixed at creation: a container made
 before v0.26.1 keeps its 64 entries. Linux is not measured.
+
+### Resizing the journal of an existing container {#journal-resize}
+
+Since v0.27.0, `theca journal resize FILE --out NEW [--entries N]` writes a copy
+of FILE with another journal size (by default the size `theca create` would
+pick). The size fixes the layout, so FILE is never rewritten. NEW keeps every
+key slot, the policy, the counter binding and the content; it is created
+exclusively, synced, reopened and compared with FILE by the hash of the volume
+before anything is reported. FILE is opened with your usual factors
+(`--password-from`, `--device`). The command does not swap the files: it prints
+the two `mv` commands. Mount the copy once before deleting the old file: with a
+rollback counter, that mount moves the counter past FILE, which is then refused.
+Until then FILE still opens. The speed gain on a resized container has not been
+measured yet (the machine was under load).
+
+```sh
+theca journal resize vault.theca --out vault-new.theca --password-from keychain:theca/vault --device bio
+```
