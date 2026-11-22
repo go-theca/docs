@@ -14,13 +14,14 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.29.0** (tag `v0.29.0` of
+Release: **v0.32.0** (tag `v0.32.0` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.29.0`). What changed is in the
-[CHANGELOG at v0.29.0](https://github.com/go-theca/theca/blob/v0.29.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.32.0`). What changed is in the
+[CHANGELOG at v0.32.0](https://github.com/go-theca/theca/blob/v0.32.0/CHANGELOG.md).
 The format may still change before v1. This page was written from v0.10.3, the
-security changes of v0.24.0 and v0.25.0 and the systemd credentials of v0.29.0
-are added below; the other changes of v0.26.0 to v0.28.0 are in the CHANGELOG, not
+security changes of v0.24.0 and v0.25.0, the systemd credentials of v0.29.0 and
+the changes of v0.30.0 to v0.32.0 are added below; the other changes of v0.26.0 to
+v0.28.0 are in the CHANGELOG, not
 here; where
 it differs from the repository, the repository wins. Its links to the
 repository's design documents still point at tag v0.1.0, and the performance
@@ -101,7 +102,9 @@ theca close vault     # unmounts, commits, closes
   for its profiles screen.
 - **Auto-close** (`close-on-lock`, default true). On Linux theca asks logind over
   D-Bus: `Session.Lock`, `LockedHint`, `PrepareForSleep`, `PrepareForShutdown`. On
-  macOS (v0.22.0) it listens for `com.apple.screenIsLocked`,
+  macOS (v0.22.0; since v0.32.0 through the
+  [go-macos/sessionwatch](https://github.com/go-macos/sessionwatch) library, v0.1.0)
+  it listens for `com.apple.screenIsLocked`,
   `NSWorkspaceWillSleepNotification` and
   `NSWorkspaceSessionDidResignActiveNotification`: no polling lag, and the
   container is closed before the machine sleeps. The observers are proven at
@@ -355,6 +358,19 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   by-value key-encryption keys on the stack, and the `crypto/hmac` pads; a local
   wiping HMAC was not adopted because it was not measured against the standard
   library (the machine was at load 29).
+- **v0.30.0** (breaking for importers): the TPM counter code moved out of theca
+  into [go-tpm2/nvcounter](https://github.com/go-tpm2/nvcounter); code that
+  imported theca's `tpmcounter` package imports that module instead. The
+  counter's behaviour is described in "Rollback counter" below.
+- **v0.31.0**: memory locking uses go-authn/harden/memlock v0.3.0, which adds
+  `VirtualLock` on Windows and a single `DisableDumps`. `--mlock` is described
+  above; check the CHANGELOG for what is measured on Windows.
+- **v0.32.0**: the macOS lock, sleep and session-end detection moved into the
+  reusable [go-macos/sessionwatch](https://github.com/go-macos/sessionwatch)
+  library (v0.1.0); theca keeps the Linux (logind) and Windows halves and a thin
+  macOS adapter, and the 2 second poll fallback is now the library's. Behaviour is
+  unchanged, and a real lock or sleep is still not measured. It also takes
+  go-filesystems/smb v0.17.2.
 - **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
   `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
