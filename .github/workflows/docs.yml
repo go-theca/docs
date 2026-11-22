@@ -182,3 +182,13 @@ jobs:
           go run github.com/go-fleettools/fleettools/cmd/pagesbuild@v0.80.0 \
             --token-file "${RUNNER_TEMP}/pages-token" \
             "${GITHUB_REPOSITORY}" "${{ steps.push.outputs.sha }}"
+
+  actionpin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version: "1.27.4"
+      - run: go install github.com/go-fleettools/fleettools/cmd/actionpin@v0.154.0
+      - run: '"$(go env GOPATH)/bin/actionpin" .'
