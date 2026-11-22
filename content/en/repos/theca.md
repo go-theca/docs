@@ -107,10 +107,38 @@ theca close vault     # unmounts, commits, closes
   registered or heard, theca falls back to reading `CGSSessionScreenIsLocked`
   every two seconds (a wall-clock jump the monotonic clock did not make counts as
   a sleep), and `theca open` prints which mode is active. The container is then
-  unmounted, committed and closed. Windows has no source yet: the container stays
-  open until `theca close`. Not measured against a real lock or sleep on either
-  system: the signals are tested with fakes, and on macOS with a real round trip
-  of a notification of our own name.
+  unmounted, committed and closed. Not measured against a real lock or sleep on
+  any system: the signals are tested with fakes, and on macOS with a real round
+  trip of a notification of our own name. Windows is described below.
+- **Windows sessions** (on `main`, in the next release; go-theca/theca#58 and #79).
+  `open`, `close` and `status` work on Windows.
+  - *Channel.* A named pipe `\\.\pipe\theca-<user SID>-<name>` whose security
+    descriptor is protected and grants access to that SID alone; the daemon also
+    reads the SID of each client's process token and refuses any other, so the
+    descriptor and the check are two independent gates.
+  - *Single instance.* `LockFileEx` on a byte far beyond the end of the file, so
+    the daemon can still read its own container; a second `open` fails before it
+    touches the rollback counter.
+  - *Console.* The daemon starts with your console so that a password or PIN
+    prompt works, then calls `FreeConsole` once `open` is told it is ready. This
+    deviates from the `DETACHED_PROCESS` the issue asked for, on purpose. It runs in
+    its own process group, and leaves the OpenSSH session's job when that job allows
+    it, so it survives the logout.
+  - *Auto-close.* A hidden message-only window listens for the lock and the logoff
+    of the daemon's own session and for the suspend. If it cannot be made or
+    registered, `open` fails (closed), unless `--close-on-lock=false`.
+  - *Profile file.* Its DACL is checked (owner, system and administrators only),
+    since Go reports mode `0666` for every Windows file.
+  - *Measured* on a Windows 11 ARM64 VM (QEMU, no TPM) over ssh: open, status from
+    a second logon, write and read through the mounted drive, close, reopen, the
+    daemon surviving the logout, and synthetic lock and suspend messages
+    delivered to the real window.
+  - *Not measured:* a real lock and a real suspend. ssh runs in session 0, where
+    locking the workstation locks nothing, and QEMU cannot sleep.
+  - *Limits.* `--mlock` is not implemented on Windows. Windows has no call that
+    makes a process undumpable, so a debugger of the same user, an administrator
+    or WER's LocalDumps can read it; theca sets `SetErrorMode` and wipes its keys.
+    A drive letter belongs to its logon session.
 
 ## Command line {#cli}
 
