@@ -14,13 +14,13 @@ them: see [Serving and mounting]({{< relref "serve.md" >}}).
 The same logic is a library package, `share`, since v0.3.0: see
 [Library: share]({{< relref "share.md" >}}).
 
-Release: **v0.32.0** (tag `v0.32.0` of
+Release: **v0.32.1** (tag `v0.32.1` of
 [go-theca/theca](https://github.com/go-theca/theca); install with
-`go install github.com/go-theca/theca/cmd/theca@v0.32.0`). What changed is in the
-[CHANGELOG at v0.32.0](https://github.com/go-theca/theca/blob/v0.32.0/CHANGELOG.md).
+`go install github.com/go-theca/theca/cmd/theca@v0.32.1`). What changed is in the
+[CHANGELOG at v0.32.1](https://github.com/go-theca/theca/blob/v0.32.1/CHANGELOG.md).
 The format may still change before v1. This page was written from v0.10.3, the
 security changes of v0.24.0 and v0.25.0, the systemd credentials of v0.29.0 and
-the changes of v0.30.0 to v0.32.0 are added below; the other changes of v0.26.0 to
+the changes of v0.30.0 to v0.32.1 are added below; the other changes of v0.26.0 to
 v0.28.0 are in the CHANGELOG, not
 here; where
 it differs from the repository, the repository wins. Its links to the
@@ -343,7 +343,8 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
     refuses, `--mlock=required` makes a refusal an error, `--mlock=off` turns it
     off; `open` hands its choice to the daemon. Not locked: the AES round keys
     inside the CTR library, transient key-encryption keys on the stack, and the
-    `crypto/hmac` pads (see v0.28.0 for which of these are wiped).
+    `crypto/hmac` pads (the pads are wiped since v0.32.1; see v0.28.0 for which
+    of these were wiped).
   - Cost, single core, 15 interleaved rounds, macOS arm64: open 187 us (off)
     against 202 us (auto) with a test-size KDF; writing 2 MiB 3.14 s against
     3.21 s; reading 8 MiB 3.06 ms against 2.96 ms. The load was slightly above 8,
@@ -355,9 +356,9 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   and wipes it. go-authn/secretsource v0.7.0 adds a Windows DACL check on
   `file:` secrets and refuses an empty one. Still not wiped: the `crypto/aes`
   fallback's key schedule (the accelerated path is wiped on `Close`), the
-  by-value key-encryption keys on the stack, and the `crypto/hmac` pads; a local
-  wiping HMAC was not adopted because it was not measured against the standard
-  library (the machine was at load 29).
+  by-value key-encryption keys on the stack, and the `crypto/hmac` pads (wiped since
+  v0.32.1, see below; a local wiping HMAC was first not adopted because it was
+  not measured against the standard library at load 29).
 - **v0.30.0** (breaking for importers): the TPM counter code moved out of theca
   into [go-tpm2/nvcounter](https://github.com/go-tpm2/nvcounter); code that
   imported theca's `tpmcounter` package imports that module instead. The
@@ -371,6 +372,12 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
   macOS adapter, and the 2 second poll fallback is now the library's. Behaviour is
   unchanged, and a real lock or sleep is still not measured. It also takes
   go-filesystems/smb v0.17.2.
+- **v0.32.1**: HMAC-SHA-256 comes from
+  [go-encryptions/hmac](https://github.com/go-encryptions/hmac) v0.1.0
+  (byte-identical to `crypto/hmac`), so the keyed pads are now wiped on `Close`:
+  they are no longer in the "not wiped" lists above. Measured equal to
+  `crypto/hmac` at 64 B, 4 KiB and 1 MiB (single core, 12 interleaved rounds, no
+  allocation).
 - **v0.10.3**: FIDO2 fingerprint handling and the PIN fallback, with the new
   `ErrUVLocked`. See `--fido2` above.
 - **v0.10.0 and v0.10.1**: `theca counter rebind`, `NO_DA` on new counters, the
