@@ -163,8 +163,10 @@ theca info vault.theca --recovery-from keychain:theca/rc --fido2 # recovery code
 
 - **Secrets never go in arguments or environment variables.** The password is
   read from the terminal with echo off, or from a secret manager (next item).
-- **Secret files are deprecated** (v0.21.0). `--password-file`, `--recovery-file`,
-  `--pin-file`, `--tpm-auth-file` and `--tpm-owner-auth-file` still work (a regular
+- **Secret files are deprecated** (v0.21.0). **`--tpm-auth-file` and
+  `--tpm-owner-auth-file` were removed in v0.33.0 (breaking)**; see the TPM counter
+  section for the migration. `--password-file`, `--recovery-file` and
+  `--pin-file` still work (a regular
   file, mode `0600` or stricter) but are hidden from the help, and each use prints
   a warning on standard error naming the `--X-from` replacement. So does a `file:`
   reference in `--password-from`, `--recovery-from` and `--pin-from`.
@@ -410,7 +412,7 @@ several Theca credentials are on the key, Windows has the person pick one.
 theca create vault.theca --size 1G --counter tpm   # defines an NV counter, binds the container to it
 theca info   vault.theca --counter tpm             # rollback protected: true (TPM NV counter ...)
 theca info   vault.theca --counter tpm --accept-rollback   # accept an older copy on purpose (loud); needs the counter
-theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # the counter is gone: bind to a new one
+theca counter rebind vault.theca --counter tpm --tpm-owner-auth-from keychain:vault/owner   # the counter is gone: bind to a new one
 ```
 
 - `--counter tpm` defines a TPM 2.0 NV counter
@@ -420,10 +422,22 @@ theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # t
   written. The copy taken during the current session is the window that stays
   open (DESIGN section 5.4).
 - Every command that opens the container needs `--counter tpm` again (and
-  `--tpm-auth-file` if you set one), **and opens the file read-write**, because a
+  `--tpm-auth-from REF` if you gave one), **and opens the file read-write**, because a
   mount rebinds the header. A protected container opened without the flag is
   refused with a message naming it. Without `--counter tpm`, a container is not
   protected: an older copy would be accepted.
+- **Upgrading to v0.33.0 (breaking).** A counter made by an older theca can have
+  its authValue stored in a file, passed with `--tpm-auth-file`, which no longer
+  exists. Opening such a container is refused by the TPM ("the TPM refused the
+  counter's authValue") and the message names the fix: run
+  `theca counter rebind FILE --counter tpm` once, with the factors that open the
+  container, **no** `--tpm-auth-*` flag, and `--tpm-owner-auth-from REF` if the TPM
+  has an owner password. It needs neither the old file nor the old value: it
+  deletes the old counter with the owner password, derives a new authValue from
+  the container's master key and binds the container to a new counter (rollback
+  protection restarts from then). Or store the old value in a secret manager and
+  give `--tpm-auth-from REF`. `--tpm-owner-auth-file` became
+  `--tpm-owner-auth-from REF`; an empty owner password needs no flag.
 - `--tpm-device` is a device path, or `unix:SOCKET` for a software TPM. The
   default is `/dev/tpmrm0` on **Linux** and `tbs:` (TPM Base Services, through
   go-tpm2/devtpm's `OpenTBS`) on **Windows** since v0.26.0. **macOS has no TPM**
@@ -434,7 +448,7 @@ theca counter rebind vault.theca --counter tpm --tpm-owner-auth-file owner   # t
   BIOS reset or a reinstall removed it; the index has no `POLICY_DELETE`, which
   would need platform authorization), the container cannot be opened. The message
   says so and names the recovery, `theca counter rebind FILE --counter tpm
-  --tpm-owner-auth-file F` (v0.10.0). Earlier text, including this page's, said
+  --tpm-owner-auth-from REF` (v0.10.0; `--tpm-owner-auth-file F` until v0.32.1). Earlier text, including this page's, said
   `--accept-rollback` would help; it does not, because it needs a counter that
   exists and is ahead of the container. `rebind` needs the factors that open the
   container **and** the TPM owner password. It defines a counter (at the recorded
